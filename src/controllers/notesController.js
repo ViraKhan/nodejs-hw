@@ -19,9 +19,10 @@ export const getNoteById = async (req, res) => {
 
 // POST-запит(create) до маршруту "/notes"
  export const createNote = async (req, res) => {
-  const note =await Note.craete(req.body);
+  const note = await Note.create(req.body);
   res.status(201).json(note);
 };
+
 // DELETE-запит до маршруту "/notes/:noteId"
  export const deleteNote = async (req, res) => {
    const { noteId } = req.params;
@@ -38,8 +39,10 @@ export const getNoteById = async (req, res) => {
 // PATCH-запит (update) до маршруту "/notes/:noteId"
  export const updateNote = async (req, res) => {
   const { noteId} = req.params;
-  const note = await Note.findOneAndUpdate({ _id: noteId },
-  req.body, { new: true });
+  const note = await Note.findOneAndUpdate(
+    { _id: noteId },
+    req.body,
+    { new: true });
   if (!note) {
     throw createHttpError(404, 'Note not found');
   }
