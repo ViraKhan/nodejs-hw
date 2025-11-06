@@ -1,5 +1,5 @@
 {
-  "name": "01-express",
+  "name": "nodejs-hw",
   "version": "1.0.0",
   "main": "server.js",
   "type": "module",
@@ -23,6 +23,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
+    "http-errors": "^2.0.0",
     "mongoose": "^8.19.3",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.2"
