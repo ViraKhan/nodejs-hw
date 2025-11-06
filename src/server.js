@@ -1,68 +1,31 @@
 import express from "express";
-import 'dotenv/config';
 import cors from 'cors';
-import pino from 'pino-http';
+import helmet from 'helmet';
+import 'dotenv/config';
+import { connectMongoDB } from './db/connectMongoDB.js';
+import notesRoutes from './routes/notesRoutes.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { logger } from "./middleware/logger.js";
 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ?? 3000;
 
-// Middleware для парсингу JSON
-app.use(express.json());
+
+app.use(helmet()); // Додає безпекові заголовки
+app.use(logger);   // Логування запитів
+app.use(express.json()); // Middleware для парсингу JSON
 app.use(cors()); // Дозволяє запити з будь-яких джерел
-app.use(
-  pino({
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-        messageFormat: '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
-        hideObject: true,
-      },
-    },
-  }),
-);
 
-/*// Головний маршрут
-app.get('/', (req, res) => {
-  res.send('<h1>Welcome to Notes API</h1><p>Visit <a href="/notes">/notes</a></p>');
-});*/
 
-// Перший маршрут
-app.get('/notes', (req, res) => {
-  res.status(200).json({ message: 'Retrieved all notes' });
-});
-// GET-запит до маршруту "/notes/:noteId"
-app.get('/notes/:noteId', (req, res) => {
-  const { noteId } = req.params;
-  res.status(200).json({
-    status: `Retrieved note with ID: ${noteId}`,
-  });
-});
-// test-error маршрут для тестування помилки
-app.get('/test-error', (req, res) => {
-  throw new Error('Simulated server error');
-});
+app.use(notesRoutes); // Routes for notes
 
-// Middleware 404 (після всіх маршрутів)
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
+app.use(notFoundHandler); // 404 handler
+app.use(errorHandler); // General error handler
 
-// Middleware для обробки помилок (останнє)
-app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-const isProd = process.env.NODE_ENV === "production";
+await connectMongoDB(); // підключення до MongoDB
 
-  res.status(500).json({
-    message: isProd
-    ? 'Internal Server Error'
-    : err.message,
-  });
-});
 
 // Запуск сервера
 app.listen(PORT, () => {
