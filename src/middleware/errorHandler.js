@@ -5,13 +5,13 @@ export const errorHandler = (err, req, res, next) => {
 
   if (err instanceof HttpError) {
     return res.status(err.status).json({
-      error: isProd
+      message: isProd
         ? "Internal Server Error"
         : err.message || err.name,
     });
   }
 
   res.status(500).json({
-    error: isProd ? "Internal Server Error" : err.message,
+    message: isProd ? "Internal Server Error" : err.message,
   });
 };
