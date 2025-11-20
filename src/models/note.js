@@ -10,11 +10,13 @@ const noteSchema = new mongoose.Schema(
       default: 'Todo'
          },
   },
-  
+
   {
      timestamps: true
     }
 );
+
+noteSchema.index({ title: "text", content: "text" });
 
 export const Note = mongoose.model("Note", noteSchema);
 
