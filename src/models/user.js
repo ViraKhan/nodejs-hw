@@ -16,7 +16,7 @@ userSchema.pre("save", function (next) {
     next();
 });
 //  метод toJSON, щоб видаляти пароль із об'єкта користувача перед відправкою у відповідь
-userSchema.method.toJSON = function () {
+userSchema.methods.toJSON = function () {
     const obj = this.toObject();
     delete obj.password;
     return obj;
