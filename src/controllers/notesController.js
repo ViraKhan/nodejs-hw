@@ -3,14 +3,44 @@ import { Note } from '../models/note.js';
 
 
 export const getAllNotes = async (req, res) => {
-  const notes = await Note.find();
-  res.status(200).json(notes);
+const { page = 1, perPage = 10, tag, search } = req.query;
+ const skip = (page - 1) * perPage;
+
+ const notesQuery = Note.find({ userId: req.user._id }); // Фільтруємо нотатки за ідентифікатором користувача
+
+ if (search) {
+  notesQuery.where({
+    $text: { $search: search }
+  });
+ }
+
+ if (tag) {
+  notesQuery.where("tag").equals(tag);
+ }
+
+ const [totalItems, notes] = await Promise.all([
+  notesQuery.clone().countDocuments(),
+  notesQuery.skip(skip).limit(perPage),
+ ]);
+
+ const totalPages = Math.ceil(totalItems / perPage);
+
+  res.status(200).json({
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    notes,
+  });
 };
 
 export const getNoteById = async (req, res) => {
   const { noteId } = req.params;
 
-  const note = await Note.findById(noteId);
+  const note = await Note.findOne({
+    _id: noteId,
+    userId: req.user._id, // Переконуємося, що нотатка належить автентифікованому користувачу
+  });
   if (!note) {
      throw createHttpError(404, 'Note not found');
   }
@@ -19,7 +49,10 @@ export const getNoteById = async (req, res) => {
 
 // POST-запит(create) до маршруту "/notes"
  export const createNote = async (req, res) => {
-  const note = await Note.create(req.body);
+  const note = await Note.create({
+    ...req.body,
+    userId: req.user._id, // Додаємо ідентифікатор користувача
+ });
   res.status(201).json(note);
 };
 
@@ -28,6 +61,7 @@ export const getNoteById = async (req, res) => {
    const { noteId } = req.params;
    const note = await Note.findOneAndDelete({
      _id: noteId,
+    userId: req.user._id, // Переконуємося, що нотатка належить автентифікованому користувачу
   });
 
   if (!note) {
@@ -40,7 +74,7 @@ export const getNoteById = async (req, res) => {
  export const updateNote = async (req, res) => {
   const { noteId} = req.params;
   const note = await Note.findOneAndUpdate(
-    { _id: noteId },
+    { _id: noteId, userId: req.user._id },
     req.body,
     { new: true });
   if (!note) {
